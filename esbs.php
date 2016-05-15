@@ -21,9 +21,33 @@ class EStoreBeanstream {
 
         add_action( 'wp_enqueue_scripts', array( $this, 'queScripts'));
         
+        add_action('admin_init', array( $this, 'adminInit'));
+        add_action('admin_menu', array( $this, 'addMenu'));
+        
         // Add your own hooks/filters
-        add_action( 'init', array(&$this, 'init') );
-        add_filter( 'eStore_below_cart_checkout_filter', array( &$this, 'addBeanstreamButton'));
+        add_action( 'init', array( $this, 'init') );
+        add_filter( 'eStore_below_cart_checkout_filter', array( $this, 'addBeanstreamButton'));
+    }
+    
+    function adminInit(){
+        register_setting('esbs-plugin-settings', 'merchant_id');
+        register_setting('esbs-plugin-settings', 'api_key');
+    }
+    function addMenu(){
+        add_options_page('ESBS settings', 
+                        'ESBS menu', 
+                        'manage_options', 
+                        'esbs-plugin-settings', 
+                        array( $this, 'pluginSettinsPage'));
+    }
+    
+    function pluginSettinsPage(){
+        if(!current_user_can('manage_options')){
+            wp_die(__('You do not have sufficient permissions to access this page.'));
+        }
+    
+        // Render the settings template
+        include(sprintf("%s/templates/settings.php", dirname(__FILE__)));
     }
     
     function queScripts(){
@@ -110,4 +134,15 @@ class EStoreBeanstream {
     function init() {
     }
 }
-new EStoreBeanstream();
+$esbs_beanstream = new EStoreBeanstream();
+if(isset( $esbs_beanstream)){
+    // Add the settings link to the plugins page
+    function plugin_settings_link( $links){ 
+        $settings_link = '<a href="options-general.php?page=esbs-plugin-settings">Settings</a>'; 
+        array_unshift($links, $settings_link); 
+        return $links; 
+    }
+
+    $plugin = plugin_basename(__FILE__); 
+    add_filter("plugin_action_links_$plugin", 'plugin_settings_link');
+}
