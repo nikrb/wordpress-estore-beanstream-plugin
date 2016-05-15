@@ -18,20 +18,86 @@ class EStoreBeanstream {
         register_deactivation_hook( __FILE__, array(&$this, 'deactivate') );
         // Set up l10n
         // load_plugin_textdomain( 'plugin-name-locale', false, dirname( plugin_basename( __FILE__ ) ) . '/lang' );
+
+        add_action( 'wp_enqueue_scripts', array( $this, 'queScripts'));
         
         // Add your own hooks/filters
         add_action( 'init', array(&$this, 'init') );
         add_filter( 'eStore_below_cart_checkout_filter', array( &$this, 'addBeanstreamButton'));
     }
     
-    function addBeanstreamButton( $parm){
-        $button_input_data = '<input type="image" src="'.
-                    $this->plugin_url.'img/Beanstream-logo.png" 
-                    name="submit" 
-                    class="eStore_paypal_checkout_button" alt="Checkout" />';
+    function queScripts(){
+        wp_enqueue_script( "esbs-beanstream-js", $this->plugin_url."js/esbsBeanstream.js", array( 'jquery') );
+    }
     
-        $button_text = $this->plugin_url.'img/Beanstream-logo.png';
-        $content .= '<div>'.$button_input_data.'</div>';
+    function addBeanstreamButton( $parm){
+        $html_form = 
+        '<div>
+            <button type="button" onclick="ESBS.toggleBeanstreamForm();">
+                <img src="'.$this->plugin_url.'img/Beanstream-logo.png" 
+                                class="eStore_paypal_checkout_button" >
+            </button>
+        </div>
+        <div id="beanstream_form" style="display:none" >
+            <table style="width: 100%;">
+                <tbody>
+                    <tr class="eStore_cart_item_value">
+                        <td class="eStore_cart_item_name_value" style="overflow: hidden;">
+                            Card Type
+                        </td>
+                        <td class="eStore_cart_item_name_value" style="overflow: hidden;">
+                            <form method="post" action="" style="display:inline">
+                                <select name="esbs-card-type">
+                                    <option value="Visa" selected>Visa</option> 
+                                    <option value="MasterCard">MasterCard</option>
+                                    <option value="Discover">Discover</option>
+                                    <option value="American Express">American Express</option>
+                                </select>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr class="eStore_cart_item_value">
+                        <td class="eStore_cart_item_name_value" style="overflow: hidden;">
+                            Card Number
+                        </td>
+                        <td class="eStore_cart_item_name_value" style="overflow: hidden;">
+                            <form method="post" action="" style="display:inline">
+                                <input type="text" name="esbs-card-number" class="eStore_cart_item_qty" />
+                            </form>
+                        </td>
+                    </tr>
+                    <tr class="eStore_cart_item_value">
+                        <td class="eStore_cart_item_name_value" style="overflow: hidden;">
+                            Card Expiry (mm/dd)
+                        </td>
+                        <td class="eStore_cart_item_name_value" style="overflow: hidden;">
+                            <form method="post" action="" style="display:inline">
+                                <input type="text" name="esbs-card-number" class="eStore_cart_item_qty required" />
+                            </form>
+                        </td>
+                    </tr>
+                    <tr class="eStore_cart_item_value">
+                        <td class="eStore_cart_item_name_value" style="overflow: hidden;">
+                            Card CVC
+                        </td>
+                        <td class="eStore_cart_item_name_value" style="overflow: hidden;">
+                            <form method="post" action="" style="display:inline">
+                                <input type="text" name="esbs-card-cvc" class="eStore_cart_item_qty required" />
+                            </form>
+                        </td>
+                    </tr>
+                    <tr class="eStore_cart_item_value">
+                        <td class="eStore_cart_item_name_value" style="overflow: hidden;">
+                            <form method="post" action="" style="display:inline">
+                                <input type="submit" name="esbs-card-cvc" class="eStore_paypal_checkout_button" value="Submit" />
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>';
+    
+        $content .= '<div>'.$html_form.'</div>';
         return $content;
     }
     
